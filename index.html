@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Tutor – State Board Students</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3250;
+      --accent:    #6c63ff;
+      --accent2:   #3ecfcf;
+      --text:      #e2e8f0;
+      --muted:     #8892aa;
+      --green:     #34d399;
+      --red:       #f87171;
+      --radius:    14px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, #1a1d27 0%, #12141f 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header p  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .badge {
+      margin-left: auto;
+      background: rgba(108,99,255,.18);
+      border: 1px solid rgba(108,99,255,.4);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      width: 100%;
+      max-width: 1100px;
+      padding: 36px 24px;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 28px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── UPLOAD ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(108,99,255,.06); }
+    .upload-zone .icon { font-size: 2rem; margin-bottom: 8px; }
+    .upload-zone p { font-size: 0.82rem; color: var(--muted); }
+    .upload-zone strong { color: var(--text); }
+    #fileInput { display: none; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #5a52d5; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-sm { padding: 7px 14px; font-size: 0.78rem; }
+
+    #uploadBtn { width: 100%; justify-content: center; margin-top: 14px; }
+
+    .progress-wrap { display: none; margin-top: 12px; }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      width: 0%;
+      transition: width .3s;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0%   { opacity: 1; }
+      50%  { opacity: .6; }
+      100% { opacity: 1; }
+    }
+
+    /* ── BOOK LIST ── */
+    #bookList { margin-top: 20px; }
+    .book-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .15s;
+      font-size: 0.84rem;
+    }
+    .book-item:hover { background: var(--surface2); }
+    .book-item.active { background: rgba(108,99,255,.15); border: 1px solid rgba(108,99,255,.35); }
+    .book-item .book-icon { font-size: 1.1rem; }
+    .book-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .book-item .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity .2s, background .2s;
+      line-height: 1;
+    }
+    .book-item:hover .del-btn { opacity: 1; }
+    .book-item .del-btn:hover { background: rgba(248,113,113,.2); }
+    .no-books { font-size: 0.8rem; color: var(--muted); text-align: center; padding: 14px 0; }
+
+    /* ── RIGHT COLUMN ── */
+    .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── CHAT ── */
+    #chatBox {
+      flex: 1;
+      min-height: 380px;
+      max-height: 460px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 4px 2px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .msg { display: flex; gap: 12px; animation: fadeUp .3s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .msg-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .msg.user .msg-avatar { background: rgba(108,99,255,.25); }
+    .msg.bot  .msg-avatar { background: rgba(62,207,207,.2); }
+    .msg-bubble {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .msg.user .msg-bubble { background: rgba(108,99,255,.2); border: 1px solid rgba(108,99,255,.25); }
+    .msg.bot  .msg-bubble { background: var(--surface2); border: 1px solid var(--border); }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      font-size: 0.75rem;
+    }
+    .stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-label { color: var(--muted); margin-bottom: 4px; }
+    .stat-value { font-weight: 700; font-size: 1rem; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.purple { color: var(--accent); }
+
+    /* ── INPUT ── */
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    #questionInput {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color .2s;
+      resize: none;
+      min-height: 50px;
+      max-height: 120px;
+    }
+    #questionInput:focus { border-color: var(--accent); }
+    #questionInput::placeholder { color: var(--muted); }
+    #askBtn { align-self: flex-end; padding: 12px 20px; }
+
+    /* ── STATUS MSG ── */
+    #statusMsg {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: none;
+    }
+    #statusMsg.error { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.3); color: var(--red); }
+    #statusMsg.success { background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3); color: var(--green); }
+    #statusMsg.info { background: rgba(108,99,255,.1); border: 1px solid rgba(108,99,255,.25); color: var(--accent); }
+
+    /* placeholder */
+    .chat-placeholder {
+      margin: auto;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 40px 0;
+    }
+    .chat-placeholder .ph-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    @media(max-width: 720px) {
+      main { grid-template-columns: 1fr; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">📚</div>
+  <div>
+    <h1>AI Tutor</h1>
+    <p>State Board Students · Context Pruning Edition</p>
+  </div>
+  <span class="badge">CONTEXT PRUNING</span>
+</header>
+
+<main>
+  <!-- LEFT: Upload + Book List -->
+  <div class="left-col">
+    <div class="card">
+      <div class="card-title">📤 Upload Textbook</div>
+
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">📄</div>
+        <p><strong>Click or drag &amp; drop</strong><br>PDF textbook here</p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf"/>
+      <div id="selectedFile" style="margin-top:10px;font-size:.8rem;color:var(--muted);"></div>
+
+      <button class="btn btn-primary" id="uploadBtn" disabled>
+        ⬆️ Upload &amp; Ingest
+      </button>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:6px;" id="progressLabel">Processing…</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">📚 Ingested Books</div>
+      <div id="bookList"><p class="no-books">No books yet. Upload a PDF.</p></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Chat -->
+  <div class="right-col">
+    <div class="card" style="flex:1; display:flex; flex-direction:column; gap:16px;">
+      <div class="card-title">💬 Ask Your Tutor</div>
+
+      <div id="statusMsg"></div>
+
+      <div id="chatBox">
+        <div class="chat-placeholder">
+          <div class="ph-icon">🎓</div>
+          <p>Select a book and ask any question<br>from your textbook!</p>
+        </div>
+      </div>
+
+      <div class="stats-strip" id="statsStrip">
+        <div class="stat-box">
+          <div class="stat-label">Chapters Kept</div>
+          <div class="stat-value purple" id="statChapters">–</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Chunks Sent</div>
+          <div class="stat-value purple" id="statChunks">–</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Tokens Used</div>
+          <div class="stat-value" id="statTokens">–</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Query Cost</div>
+          <div class="stat-value green" id="statCost">–</div>
+        </div>
+      </div>
+
+      <div class="input-row">
+        <textarea id="questionInput" placeholder="Type your question here… (Press Enter to send)" rows="1"></textarea>
+        <button class="btn btn-primary" id="askBtn" disabled>Ask ➤</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = 'http://127.0.0.1:5000/api';
+  let selectedBook = null;
+
+  // ── File Upload ──────────────────────────────────────────────────────────
+  const fileInput  = document.getElementById('fileInput');
+  const dropZone   = document.getElementById('dropZone');
+  const uploadBtn  = document.getElementById('uploadBtn');
+  const selectedFileLabel = document.getElementById('selectedFile');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+      selectedFileLabel.textContent = '📎 ' + fileInput.files[0].name;
+      uploadBtn.disabled = false;
+    }
+  });
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.pdf')) {
+      fileInput.files = e.dataTransfer.files;
+      selectedFileLabel.textContent = '📎 ' + file.name;
+      uploadBtn.disabled = false;
+    }
+  });
+
+  uploadBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    uploadBtn.disabled = true;
+    const pw = document.getElementById('progressWrap');
+    const pf = document.getElementById('progressFill');
+    const pl = document.getElementById('progressLabel');
+    pw.style.display = 'block';
+    pf.style.width = '30%';
+    pl.textContent = 'Uploading…';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      pf.style.width = '60%';
+      pl.textContent = 'Ingesting PDF…';
+      const res  = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+      pf.style.width = '100%';
+
+      if (!res.ok || data.error) throw new Error(data.error);
+
+      pl.textContent = `✅ Done! ${data.summary.chapters} chapters · ${data.summary.chunks} chunks`;
+      setTimeout(() => { pw.style.display = 'none'; pf.style.width = '0%'; }, 3000);
+      showStatus(`Textbook ingested: ${data.summary.pages} pages, ` +
+                 `${data.summary.chapters} chapters, ${data.summary.chunks} chunks.`, 'success');
+      loadBooks();
+    } catch(e) {
+      pl.textContent = '❌ ' + e.message;
+      pf.style.background = 'var(--red)';
+      setTimeout(() => { pw.style.display='none'; pf.style.background=''; pf.style.width='0%'; }, 4000);
+      showStatus(e.message, 'error');
+    }
+    uploadBtn.disabled = false;
+  });
+
+  // ── Book List ────────────────────────────────────────────────────────────
+  async function loadBooks() {
+    const res   = await fetch(`${API}/books`);
+    const data  = await res.json();
+    const books = data.books || [];
+    const list  = document.getElementById('bookList');
+
+    if (!books.length) {
+      list.innerHTML = '<p class="no-books">No books yet. Upload a PDF.</p>';
+      return;
+    }
+    list.innerHTML = books.map(b => `
+      <div class="book-item ${b === selectedBook ? 'active' : ''}" id="book-${CSS.escape(b)}">
+        <span class="book-icon">📗</span>
+        <span class="book-name" title="${b}" onclick="selectBook('${b}')">${b}</span>
+        <button class="del-btn" title="Delete book" onclick="deleteBook('${b}')">🗑️</button>
+      </div>`).join('');
+  }
+
+  function selectBook(name) {
+    selectedBook = name;
+    document.getElementById('askBtn').disabled = false;
+    document.querySelectorAll('.book-item').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('book-' + CSS.escape(name));
+    if (el) el.classList.add('active');
+    showStatus(`Selected: ${name}`, 'info');
+  }
+
+  async function deleteBook(name) {
+    if (!confirm(`Delete "${name}"? This will remove its index and you'll need to re-upload.`)) return;
+    try {
+      const res  = await fetch(`${API}/books/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error);
+      if (selectedBook === name) {
+        selectedBook = null;
+        document.getElementById('askBtn').disabled = true;
+      }
+      showStatus(`"${name}" deleted.`, 'success');
+      loadBooks();
+    } catch(e) {
+      showStatus('Delete failed: ' + e.message, 'error');
+    }
+  }
+
+  // ── Chat ─────────────────────────────────────────────────────────────────
+  const chatBox  = document.getElementById('chatBox');
+  const input    = document.getElementById('questionInput');
+  const askBtn   = document.getElementById('askBtn');
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askBtn.click(); }
+  });
+
+  askBtn.addEventListener('click', async () => {
+    const q = input.value.trim();
+    if (!q || !selectedBook) return;
+    if (!selectedBook) { showStatus('Please select a book first.', 'error'); return; }
+
+    // remove placeholder
+    const ph = chatBox.querySelector('.chat-placeholder');
+    if (ph) ph.remove();
+
+    appendMsg('user', q);
+    input.value = '';
+    askBtn.disabled = true;
+
+    // typing indicator
+    const typingId = appendMsg('bot', '⏳ Thinking…');
+
+    try {
+      const res  = await fetch(`${API}/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, book_name: selectedBook })
+      });
+      const data = await res.json();
+
+      removeMsg(typingId);
+      if (!res.ok || data.error) throw new Error(data.error);
+
+      appendMsg('bot', data.answer);
+      updateStats(data);
+    } catch(e) {
+      removeMsg(typingId);
+      appendMsg('bot', '❌ Error: ' + e.message);
+      showStatus(e.message, 'error');
+    }
+
+    askBtn.disabled = false;
+    if (selectedBook) document.getElementById('askBtn').disabled = false;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  let msgCounter = 0;
+  function appendMsg(role, text) {
+    const id  = 'msg-' + (++msgCounter);
+    const avatar = role === 'user' ? '🧑‍🎓' : '🤖';
+    const div  = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.id = id;
+    div.innerHTML = `
+      <div class="msg-avatar">${avatar}</div>
+      <div class="msg-bubble">${escHtml(text)}</div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return id;
+  }
+
+  function removeMsg(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/\n/g,'<br>');
+  }
+
+  function updateStats(data) {
+    const strip = document.getElementById('statsStrip');
+    strip.style.display = 'grid';
+    const ps = data.pruning_stats || {};
+    document.getElementById('statChapters').textContent =
+      `${ps.pruned_to_chapters || '?'} / ${ps.total_chapters || '?'}`;
+    document.getElementById('statChunks').textContent =
+      `${ps.sent_chunks || '?'} / ${ps.total_chunks || '?'}`;
+    document.getElementById('statTokens').textContent =
+      (data.prompt_tokens || 0) + (data.completion_tokens || 0);
+    document.getElementById('statCost').textContent =
+      '$' + (data.cost_usd || 0).toFixed(5);
+  }
+
+  // ── Status ───────────────────────────────────────────────────────────────
+  function showStatus(msg, type='info') {
+    const el = document.getElementById('statusMsg');
+    el.textContent = msg;
+    el.className = type;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 5000);
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  loadBooks();
+</script>
+</body>
+</html>
